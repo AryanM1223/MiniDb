@@ -1,7 +1,7 @@
 # Mini Database Engine
 
 <p align="center">
-  **A database storage engine built from scratch in Java.**
+  
 
   Exploring how databases store, organize, retrieve, and persist data at the lowest level — one page at a time.
 </p>
