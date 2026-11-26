@@ -1,58 +1,52 @@
 # Mini Database Engine
 
-<p align="center">
-  
-
-  Exploring how databases store, organize, retrieve, and persist data at the lowest level — one page at a time.
-</p>
+A lightweight database storage engine implemented from scratch in Java, focused on page management, record storage, and disk persistence.
 
 ---
 
 ## Overview
 
-**Mini Database Engine** is a hands-on implementation of the storage layer of a database, written in Java.
+This project implements the foundational components of a database storage engine. It explores how databases organize records into fixed-size pages, manage available space, handle fragmentation, and persist data to disk.
 
-Instead of relying on an existing database engine, this project explores the fundamentals behind one: fixed-size pages, slotted-page architecture, record management, memory layout, and disk-based persistence.
-
-The goal is simple: understand what happens underneath the abstractions we use every day when working with databases.
+The implementation focuses on low-level storage operations and binary data management without relying on an existing database engine.
 
 ## Features
 
-- **Fixed-Size Pages** — 4 KB pages backed by byte arrays.
-- **Slotted-Page Architecture** — A slot directory keeps track of records stored inside each page.
-- **Record Operations** — Insert, retrieve, and delete records using slot IDs.
-- **Space Management** — Track free space and compact pages to reclaim fragmentation.
-- **Disk Persistence** — Read and write pages directly to a database file using Java's `RandomAccessFile`.
-- **Page Reconstruction** — Rebuild page objects from raw bytes loaded from disk.
+- **Page Management:** Fixed-size 4 KB pages with structured metadata.
+- **Slotted-Page Architecture:** Slot directory for managing record locations within pages.
+- **Record Operations:** Insert, retrieve, and delete records using slot identifiers.
+- **Space Management:** Free-space tracking and page compaction.
+- **Disk Persistence:** Page-level read and write operations using `RandomAccessFile`.
+- **Page Reconstruction:** Reconstruct page objects from persisted binary data.
 
-## How It Works
-
-The engine uses a page-oriented storage model. Each page is a fixed-size block of 4096 bytes containing metadata, a slot directory, and record data.
+## Architecture
 
 ### Page Layout
 
+Each page occupies 4096 bytes and consists of a header, slot directory, free space, and record data.
+
 ```text
-       4096 Bytes
-┌──────────────────────────────┐
-│         Page Header          │
-├──────────────────────────────┤
-│        Slot Directory        │
-│                              │
-│  Slot 0 → Record Metadata    │
-│  Slot 1 → Record Metadata    │
-│  Slot 2 → Record Metadata    │
-│             ...              │
-├──────────────────────────────┤
-│                              │
-│          Free Space          │
-│                              │
-├──────────────────────────────┤
-│         Record Data          │
-│         grows backward       │
-└──────────────────────────────┘
+              4096 Bytes
+┌────────────────────────────────┐
+│           Page Header           │
+├────────────────────────────────┤
+│         Slot Directory          │
+│                                │
+│  Slot 0  │ Offset │ Length     │
+│  Slot 1  │ Offset │ Length     │
+│  Slot 2  │ Offset │ Length     │
+│    ...                         │
+├────────────────────────────────┤
+│                                │
+│           Free Space            │
+│                                │
+├────────────────────────────────┤
+│          Record Data            │
+│       (grows backwards)         │
+└────────────────────────────────┘
 ```
 
-The slot directory grows forward from the beginning of the page, while records are stored from the end backwards. This allows records to be located through stable slot IDs without requiring the slot directory to store the records themselves.
+The slot directory grows forward from the beginning of the page, while record data grows backward from the end. Each slot stores metadata used to locate its corresponding record.
 
 ### Storage Architecture
 
@@ -62,21 +56,17 @@ The slot directory grows forward from the beginning of the page, while records a
                ▼
           DiskManager
                │
-       ┌───────┴───────┐
-       ▼               ▼
-   Read Page       Write Page
-       │               │
-       └───────┬───────┘
+        ┌──────┴──────┐
+        ▼             ▼
+    Read Page     Write Page
+        │             │
+        └──────┬──────┘
                ▼
-             Page
+              Page
                │
        ┌───────┼────────┐
        ▼       ▼        ▼
      Insert  Retrieve  Delete
-               │
-               ▼
-          Page Bytes
-          (4096 bytes)
 ```
 
 ## Tech Stack
@@ -84,6 +74,6 @@ The slot directory grows forward from the beginning of the page, while records a
 | Technology | Purpose |
 |---|---|
 | Java | Core implementation |
-| ByteBuffer | Reading and writing binary page metadata |
-| RandomAccessFile | Direct file-based storage |
-| File I/O | Persistent page management |
+| ByteBuffer | Binary page metadata manipulation |
+| RandomAccessFile | Random-access disk operations |
+| Java I/O | File creation and persistent storage |
